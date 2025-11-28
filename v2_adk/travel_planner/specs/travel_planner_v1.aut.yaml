@@ -1,0 +1,213 @@
+aut_id: travel_planner
+name: Travel Itinerary Planner
+version: travel_v1
+
+description: >
+  ADK-based travel itinerary planner that generates a day-by-day plan, rough budget,
+  and season-aware activities for a given destination, dates/duration, budget, and style.
+
+# === General runtime (new generalist block; ADK-compatible) ===
+runtime:
+  type: adk
+  config:
+    app_entrypoint: v2_adk.travel_planner.app.main:create_app
+    root_agent: travel_root_agent
+    config_file: v2_adk/travel_planner/specs/travel_planner_config_v1.json
+
+# === ADK legacy compatibility (kept; no breakage) ===
+adk:
+  app_entrypoint: v2_adk.travel_planner.app.main:create_app
+  root_agent: travel_root_agent
+  config_file: v2_adk/travel_planner/specs/travel_planner_config_v1.json
+
+# === Models ===
+models:
+  - name: gemini-2.5-flash
+    provider: google
+    temperature: 0.2
+
+# === Flow configuration ===
+flows:
+  type: sequential
+  allow_iterations: true
+  max_iterations: 5
+
+# === Sessions ===
+sessions:
+  enabled: true
+  service_class: InMemorySessionService
+  ttl_minutes: 120
+
+# === Memory ===
+memory:
+  enabled: false
+  kind: none
+  config: {}
+
+# === Inputs schema ===
+inputs:
+  schema_version: 1.0
+  type: object
+  required:
+    - destination
+  properties:
+    destination:
+      type: string
+      description: Target destination city or region.
+    start_date:
+      type: string
+      format: date
+    end_date:
+      type: string
+      format: date
+    duration_days:
+      type: integer
+      minimum: 1
+      maximum: 30
+    origin:
+      type: string
+    budget_total:
+      type: number
+      minimum: 0
+    travel_style:
+      type: string
+      enum: [relaxed, balanced, packed]
+    interests:
+      type: array
+      items:
+        type: string
+    travelers_profile:
+      type: object
+      properties:
+        adults: { type: integer, minimum: 1 }
+        children: { type: integer, minimum: 0 }
+        notes: { type: string }
+    constraints:
+      type: object
+      properties:
+        mobility:
+          type: string
+          enum: [none, low, medium, high]
+        must_include:
+          type: array
+          items: { type: string }
+        must_avoid:
+          type: array
+          items: { type: string }
+
+# === Outputs schema ===
+outputs:
+  schema_version: 1.0
+  type: object
+  required: [itinerary_days, budget_summary]
+  properties:
+    itinerary_days:
+      type: array
+      items:
+        type: object
+        required: [day_index, title, summary, activities]
+        properties:
+          day_index: { type: integer }
+          title: { type: string }
+          summary: { type: string }
+          activities:
+            type: array
+            items:
+              type: object
+              required: [time_of_day, name]
+              properties:
+                time_of_day: { type: string, enum: [morning, afternoon, evening, night] }
+                name: { type: string }
+                description: { type: string }
+                approx_cost: { type: number }
+                booking_required: { type: boolean }
+    budget_summary:
+      type: object
+      required: [currency, total_estimated, per_day_estimate]
+      properties:
+        currency: { type: string }
+        total_estimated: { type: number }
+        per_day_estimate: { type: number }
+        breakdown:
+          type: object
+          properties:
+            lodging: { type: number }
+            food: { type: number }
+            local_transport: { type: number }
+            activities: { type: number }
+            misc: { type: number }
+    season_notes:
+      type: object
+      properties:
+        season_label: { type: string }
+        weather_assumptions: { type: string }
+        special_considerations: { type: string }
+    assumptions:
+      type: array
+      items: { type: string }
+    warnings:
+      type: array
+      items: { type: string }
+
+# === Capabilities ===
+capabilities:
+  tasks:
+    - id: create_itinerary
+      description: >
+        Generate a day-by-day travel itinerary with budget estimates
+        and season-aware activities.
+      primary: true
+  modes:
+    - interactive: false
+      batch: true
+
+# (Optional tag list)
+capability_tags:
+  - create_itinerary
+  - budget_estimation
+  - seasonality_explanation
+
+# === Tools (updated for general ToolSpec) ===
+tools:
+  - id: dest_info_tool
+    kind: adk_tool
+    module: v2_adk.travel_planner.app.tools.dest_info_tool
+    description: "Returns destination info and typical cost ranges."
+  - id: weather_tool
+    kind: adk_tool
+    module: v2_adk.travel_planner.app.tools.weather_tool
+    description: "Returns typical seasonal weather for the destination."
+  - id: budget_tool
+    kind: adk_tool
+    module: v2_adk.travel_planner.app.tools.budget_tool
+    description: "Computes budget breakdown."
+
+# === Risk Profile ===
+risk_profile:
+  data_sensitivity: low
+  network_access: mock_only
+  safety_notes:
+    - "Do not recommend illegal activities."
+    - "Avoid unsafe extreme sports unless explicitly requested and caveated."
+    - "Default to family-friendly if children present."
+
+# === Evaluation Config (supports human + LLM judge) ===
+evaluation:
+  default_pack: travel_pack
+  default_golden_set: travel_golden_v1
+  golden_path: v2_adk/travel_planner/tests/golden/travel_golden_v1.csv
+
+  metrics:
+    - task_success
+    - judge_score_avg
+    - judge_score_p95
+    - latency_ms_p95
+
+  judge:
+    model: gemini-2.5-pro
+    rubric_id: travel_itinerary_v1
+
+  human_review:
+    enabled: false
+    label_schema: {}
+    routing_rules: {}

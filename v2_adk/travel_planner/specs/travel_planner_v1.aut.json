@@ -1,0 +1,37 @@
+{
+  "aut_id": "travel_planner_v1",
+  "description": "Multi-tool travel itinerary agent that generates day-by-day plans, budgets, assumptions, and season-aware suggestions.",
+  "inputs_schema": {
+    "destination": "string",
+    "duration_days": "integer",
+    "budget_total": "number",
+    "travel_style": "string",
+    "travelers_profile": {
+      "adults": "integer",
+      "children": "integer"
+    }
+  },
+  "outputs_schema": {
+    "markdown_itinerary": "string",
+    "estimated_cost": "number",
+    "assumptions": "string"
+  },
+  "agents": [
+    {
+      "name": "travel_planner_root_agent",
+      "model": "gemini-2.0-flash",
+      "config_ref": "travel_planner_config_v1.json"
+    }
+  ],
+  "tools": [
+    { "name": "dest_info_tool", "type": "python", "path": "tools/dest_info_tool.py" },
+    { "name": "weather_tool", "type": "python", "path": "tools/weather_tool.py" },
+    { "name": "budget_tool", "type": "python", "path": "tools/budget_tool.py" }
+  ],
+  "risks": [
+    "Hallucinated prices",
+    "Incorrect seasonal assumptions",
+    "Missing day-by-day structure",
+    "Inconsistent budget summaries"
+  ]
+}

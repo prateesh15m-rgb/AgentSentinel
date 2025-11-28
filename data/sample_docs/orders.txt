@@ -1,0 +1,2 @@
+To cancel an order, go to the Orders page and click "Cancel Order".
+Refunds are issued within 5–7 business days.

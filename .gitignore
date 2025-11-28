@@ -1,0 +1,23 @@
+# Virtualenvs & caches
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+.mypy_cache/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Environment files
+.env
+*.env
+
+# Data & traces (runtime artifacts, not source)
+data/traces.jsonl
+data/*.jsonl
+
+# OS junk
+.DS_Store

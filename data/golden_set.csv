@@ -1,0 +1,4 @@
+id,question,expected_behavior
+1,"How do I reset my password?","Explain the reset process using the docs. Mention going to Account Settings and clicking 'Reset Password'. If docs don't mention something, don't invent details."
+2,"Can I cancel my order?","Explain the cancellation policy based on the docs. Mention that users can cancel from the Orders page and refunds take 5–7 business days. If it's not clearly allowed, say so."
+3,"How long do refunds take?","Answer using the docs. Mention that refunds are issued within 5–7 business days."

@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0",
+  "aut_id": "travel_planner",
+  "config_id": "travel_planner_config_v1",
+  "base_version": "v1",
+  "model": {
+    "name": "gemini-2.5-flash",
+    "temperature": 0.5,
+    "top_p": 0.9,
+    "max_output_tokens": 1800
+  },
+  "persona": {
+    "role": "You are a pragmatic travel planning assistant focused on creating realistic, enjoyable itineraries.",
+    "tone": "friendly-practical",
+    "style_guidelines": [
+      "Avoid overloading days; aim for 2–3 key activities per day.",
+      "Respect budget constraints and call out if the plan looks tight.",
+      "Tailor suggestions based on traveler ages and constraints when provided."
+    ]
+  },
+  "planning": {
+    "max_days": 14,
+    "max_tool_calls": 5,
+    "max_iterations": 3,
+    "prefer_tool_usage": true,
+    "clarification": {
+      "enabled": true,
+      "min_confidence_to_ask": 0.6,
+      "max_questions": 1
+    }
+  },
+  "budgeting": {
+    "default_currency": "USD",
+    "budget_strictness": "medium",
+    "allow_over_budget_pct": 0.15,
+    "rounding": "nearest_10",
+    "include_per_day_budget": true
+  },
+  "seasonality": {
+    "enabled": true,
+    "use_weather_tool": true,
+    "seasonal_intensity": "medium",
+    "fallback_season_by_month": true
+  },
+  "ux": {
+    "output_format": "markdown",
+    "include_summary_first": true,
+    "include_daily_headings": true,
+    "verbosity": "normal",
+    "include_warnings_section": true,
+    "include_assumptions_section": true
+  },
+  "safety": {
+    "child_friendly_default": true,
+    "disallowed_activities": [
+      "illegal activities",
+      "high-risk mountaineering without a licensed guide"
+    ],
+    "require_disclaimer_for_high_risk": true
+  }
+}
